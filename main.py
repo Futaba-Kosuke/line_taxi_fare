@@ -33,6 +33,13 @@ def parse_inputs (lines: List['str']) -> List[List[int]]:
 
     return times_sec, distances_meter
 
+def is_midnight (t_begin_sec: int, t_end_sec: int) -> bool:
+    return (
+            int((t_begin_sec % (24*60*60))/(60*60)) < 5 or 22 <= int((t_begin_sec % (24*60*60))/(60*60))
+        ) and (
+            int((t_end_sec% (24*60*60))/(60*60)) < 5 or 22 <= int((t_end_sec % (24*60*60))/(60*60))
+        )
+
 def calc_money (times_sec: List[float], distances_meter: List[float]) -> int:
 
     money = 0
@@ -41,13 +48,21 @@ def calc_money (times_sec: List[float], distances_meter: List[float]) -> int:
     slow_times_all = 0
 
     # 距離計算
-    for distance in distances_meter:
-        distance_all += distance
+    for i, distance in enumerate(distances_meter):
+        if i == 0:
+            continue
+        elif is_midnight(times_sec[i - 1], times_sec[i]):
+            distance_all += distance * 1.25
+        else:
+            distance_all += distance
 
     # 低速時間計算
     for i in range(len(times_sec) - 1):
         if distances_meter[i + 1] / (times_sec[i + 1] - times_sec[i]) * 60 * 60 <= SLOW_SPEED:
-            slow_times_all += (times_sec[i + 1] - times_sec[i])
+            if is_midnight(times_sec[i], times_sec[i + 1]):
+                slow_times_all += (times_sec[i + 1] - times_sec[i]) * 1.25
+            else:
+                slow_times_all += (times_sec[i + 1] - times_sec[i])
 
     # 料金計算
     if distance_all <= FIRST_DISTANCE:

@@ -6,11 +6,18 @@
 import sys
 from typing import List, Final
 
+# 1052[m] まで 410[円]
 FIRST_MONEY: Final[int] = 410
 FIRST_DISTANCE: Final[int] = 1052
 
+# 237[m] ごとに 80[円]
 NORMAL_MONEY: Final[int] = 80
 NORMAL_DISTANCE: Final[int] = 237
+
+# 10[km/h] 以下なら 90[秒] ごとに 80[円]
+SLOW_SPEED: Final[int] = 10 * 1e3
+SLOW_SPEED_TIME: Final[int] = 1 * 60 + 30
+SLOW_SPEED_MONEY: Final[int] = 80
 
 def parse_inputs (lines: List['str']) -> List[List[int]]:
 
@@ -31,14 +38,24 @@ def calc_money (times_sec: List[float], distances_meter: List[float]) -> int:
     money = 0
 
     distance_all = 0
+    slow_times_all = 0
 
+    # 距離計算
     for distance in distances_meter:
         distance_all += distance
 
+    # 低速時間計算
+    for i in range(len(times_sec) - 1):
+        if distances_meter[i + 1] / (times_sec[i + 1] - times_sec[i]) * 60 * 60 <= SLOW_SPEED:
+            slow_times_all += (times_sec[i + 1] - times_sec[i])
+
+    # 料金計算
     if distance_all <= FIRST_DISTANCE:
         money += FIRST_MONEY
     else:
         money += FIRST_MONEY + int((distance_all - FIRST_DISTANCE) / NORMAL_DISTANCE) * NORMAL_MONEY
+
+    money += int(slow_times_all / SLOW_SPEED_TIME) * SLOW_SPEED_MONEY
 
     return money
 
